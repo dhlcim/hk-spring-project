@@ -94,6 +94,19 @@
       showStatus(`${data.length}건 조회됨`);
     }
 
+    function extractArray(data) {
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === 'object') {
+        // 객체 안에서 첫 번째 배열 값을 찾아 반환
+        for (const val of Object.values(data)) {
+          if (Array.isArray(val)) return val;
+        }
+        // 배열이 없으면 객체 자체를 단일 행으로 감싸서 반환
+        return [data];
+      }
+      return [];
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -117,8 +130,9 @@
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const data = await res.json();
-        renderTable(data);
+        const raw = await res.json();
+        console.log('API 응답 원본:', raw);
+        renderTable(extractArray(raw));
       } catch (err) {
         showStatus(`오류: ${err.message}`, true);
         tableWrapper.classList.add('hidden');
