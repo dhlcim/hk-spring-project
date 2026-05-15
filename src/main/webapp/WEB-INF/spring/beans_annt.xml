@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    Spring Bean 설정 파일 (applicationContext.xml)
+    과거에는 Bean을 이 XML 파일에 하나하나 직접 등록했지만,
+    어노테이션 방식에서는 이 파일을 매우 간단하게 유지할 수 있다.
+-->
+
+<!-- 
+    beans: 이 XML 파일이 Spring Bean 설정 파일임을 선언하는 최상위 태그
+    xmlns 속성들: Spring 설정 파일에서 사용할 문법(스키마)의 출처를 명시한다.
+    xmlns:context: <context:...> 태그를 사용하기 위해 추가로 선언한 네임스페이스
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
+    <!-- 
+        component-scan: Spring에게 @Component, @Autowired 등의 어노테이션을 자동으로 스캔해서 처리하라고 지시한다.
+        base-package: 스캔을 시작할 패키지 경로를 지정한다.
+                      "com.kopo.hkcode.annot" 패키지 안에 있는 모든 클래스를 검사해서
+                      @Component가 붙어있으면 자동으로 Bean으로 등록해준다.
+        
+        즉, 이 한 줄 덕분에 XML에 Bean을 일일이 등록하지 않아도
+        @Component가 붙은 ConsolePrinter, StringPrinter, Hello가 자동으로 Bean이 된다.
+    -->
+    <context:component-scan base-package="com.kopo.hkcode.annot" />
+
+</beans>
