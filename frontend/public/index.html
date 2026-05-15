@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Max Qty 조회</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center py-12 px-4">
+
+  <div class="w-full max-w-2xl">
+    <h1 class="text-2xl font-bold mb-8 text-white">Max Qty 조회</h1>
+
+    <!-- 입력 폼 -->
+    <form id="queryForm" class="bg-gray-800 rounded-xl p-6 shadow-lg mb-8 space-y-4">
+      <div>
+        <label for="regionid" class="block text-sm font-medium text-gray-300 mb-1">Region ID</label>
+        <input
+          type="text"
+          id="regionid"
+          name="regionid"
+          placeholder="Region ID 입력"
+          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label for="productgroup" class="block text-sm font-medium text-gray-300 mb-1">Product Group</label>
+        <input
+          type="text"
+          id="productgroup"
+          name="productgroup"
+          placeholder="Product Group 입력"
+          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <button
+        type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors"
+      >
+        조회
+      </button>
+    </form>
+
+    <!-- 상태 메시지 -->
+    <p id="statusMsg" class="text-sm text-gray-400 mb-4 hidden"></p>
+
+    <!-- 결과 테이블 -->
+    <div id="tableWrapper" class="hidden overflow-x-auto rounded-xl shadow-lg">
+      <table class="w-full text-sm text-left border-collapse">
+        <thead id="tableHead" class="bg-gray-700 text-gray-300 uppercase text-xs"></thead>
+        <tbody id="tableBody" class="divide-y divide-gray-700"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('queryForm');
+    const tableWrapper = document.getElementById('tableWrapper');
+    const tableHead = document.getElementById('tableHead');
+    const tableBody = document.getElementById('tableBody');
+    const statusMsg = document.getElementById('statusMsg');
+
+    function showStatus(msg, isError = false) {
+      statusMsg.textContent = msg;
+      statusMsg.className = `text-sm mb-4 ${isError ? 'text-red-400' : 'text-gray-400'}`;
+      statusMsg.classList.remove('hidden');
+    }
+
+    function renderTable(data) {
+      if (!Array.isArray(data) || data.length === 0) {
+        tableWrapper.classList.add('hidden');
+        showStatus('결과가 없습니다.');
+        return;
+      }
+
+      const columns = Object.keys(data[0]);
+
+      tableHead.innerHTML = `<tr>${columns.map(col =>
+        `<th class="px-4 py-3 whitespace-nowrap">${col}</th>`
+      ).join('')}</tr>`;
+
+      tableBody.innerHTML = data.map((row, i) =>
+        `<tr class="${i % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'} hover:bg-gray-700 transition-colors">
+          ${columns.map(col =>
+            `<td class="px-4 py-3 whitespace-nowrap text-gray-200">${row[col] ?? ''}</td>`
+          ).join('')}
+        </tr>`
+      ).join('');
+
+      tableWrapper.classList.remove('hidden');
+      showStatus(`${data.length}건 조회됨`);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const regionid = document.getElementById('regionid').value.trim();
+      const productgroup = document.getElementById('productgroup').value.trim();
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '조회 중...';
+      tableWrapper.classList.add('hidden');
+      showStatus('요청 중...');
+
+      try {
+        const body = new URLSearchParams({ regionid, productgroup });
+
+        const res = await fetch('http://localhost:8181/hk/getMaxQty', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        renderTable(data);
+      } catch (err) {
+        showStatus(`오류: ${err.message}`, true);
+        tableWrapper.classList.add('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '조회';
+      }
+    });
+  </script>
+</body>
+</html>
